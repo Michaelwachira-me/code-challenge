@@ -1,35 +1,80 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import ExpenseTable from './components/ExpenseTable';
+import ExpenseForm from './components/ExpenseForm';
+import SearchBar from './components/SearchBar';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const [expenses, setExpenses] = useState([
+    {
+      expenseName: 'Buy sneakers',
+      description: 'Add to my sneakers collection',
+      category: 'Personal',
+      amount: 4000,
+      date: '2025-04-15',
+    },
+    {
+      expenseName: 'Buy Animal Feeds',
+      description: 'Restock my animal feeds' ,
+      category: 'Personal',
+      amount: 7500,
+      date: '2025-04-14',
+    },
+  ]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+
+  const addExpense = (expense) => {
+    setExpenses([...expenses, { ...expense, date: new Date().toISOString().split('T')[0] }]);
+  };
+
+  const deleteExpense = (index) => {
+    setExpenses(expenses.filter((_, i) => i !== index));
+  };
+
+  const handleSort = (field) => {
+    const isAsc = sortField === field && sortOrder === 'asc';
+    setSortField(field);
+    setSortOrder(isAsc ? 'desc' : 'asc');
+  };
+
+  const sortedExpenses = [...expenses].sort((a, b) => {
+    if (!sortField) return 0;
+    const aValue = typeof a[sortField] === 'string' ? a[sortField].toLowerCase() : a[sortField];
+    const bValue = typeof b[sortField] === 'string' ? b[sortField].toLowerCase() : b[sortField];
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    }
+    return aValue < bValue ? 1 : -1;
+  });
+
+  const filteredExpenses = sortedExpenses.filter(
+    (expense) =>
+      expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.expenseName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app-container">
+      <div className="app">
+        <div className="sidebar">
+          <h2>Add Expense</h2>
+          <ExpenseForm onAddExpense={addExpense} />
+        </div>
+        <div className="main-content">
+          <h1>Expense Tracker</h1>
+          <SearchBar onSearch={setSearchTerm} />
+          <ExpenseTable
+            expenses={filteredExpenses}
+            onSort={handleSort}
+            onDelete={deleteExpense}
+          />
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default App
+export default App;
